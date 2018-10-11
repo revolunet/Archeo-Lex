@@ -12,6 +12,7 @@
 
 # Imports
 import os
+import sys
 import subprocess
 import datetime
 import time
@@ -39,7 +40,7 @@ def creer_historique_legi(textes, format, dossier, bdd, production):
         f_textes.close()
 
     if not os.path.exists( bdd ):
-        raise Exception( 'Base de données legi.py manquante.' )
+        raise Exception( 'Base de données legi.py manquante : ', bdd )
 
     textes = textes.strip()
     textes = re.split( r'[\n,]+', textes )
@@ -202,14 +203,15 @@ def creer_historique_texte(arg):
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
         if not os.path.exists(os.path.join(dossier, sousdossier)):
             mise_a_jour = False
-        os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
+            os.makedirs(os.path.join(dossier, sousdossier))
     elif nature and (nature in natures.keys()) and entree_texte[2]:
-        identifiant = entree_texte[3][0].lower()+entree_texte[3][1:].replace(' ','_')
+        identifiant = (entree_texte[3][0].lower() + entree_texte[3][1:].replace(' ','_'))
         nom_fichier = identifiant
         sousdossier = os.path.join(nature_min_pluriel, identifiant)
-        if not os.path.exists(os.path.join(dossier, sousdossier)):
+        dossier_destination=os.path.join(dossier.encode(sys.getdefaultencoding()), sousdossier.encode(sys.getdefaultencoding()))
+        if not os.path.exists(dossier_destination):
             mise_a_jour = False
-        os.makedirs(os.path.join(dossier, sousdossier), exist_ok=True)
+            os.makedirs(dossier_destination)
     else:
         raise Exception('Type bizarre ou inexistant')
         sousdossier = os.path.join(sousdossier, nom)
@@ -256,7 +258,7 @@ def creer_historique_texte(arg):
         if git_refs_base:
             date_maj_git = paris.localize( datetime.datetime(*(time.strptime(git_refs_base[-1][1], '%Y%m%d-%H%M%S')[0:6])) )
         else:
-            raise Exception('Pas de tag de la dernière mise à jour')        
+            raise Exception('Pas de tag de la dernière mise à jour')
         logger.info('Dernière mise à jour du dépôt : {}'.format(date_maj_git.isoformat()))
 
         # Obtention de la première date qu’il faudra mettre à jour
@@ -318,7 +320,7 @@ def creer_historique_texte(arg):
         if reset_hash:
             if date_reprise_git <= last_update_jour.strftime('%Y-%m-%d'):
                 subprocess.call(['git', 'checkout', branche], cwd=dossier)
-            subprocess.call(['git', 'reset', '--hard', reset_hash], cwd=dossier) 
+            subprocess.call(['git', 'reset', '--hard', reset_hash], cwd=dossier)
         else:
             subprocess.call(['git', 'branch', '-m', branche, 'junk'], cwd=dossier)
             subprocess.call(['git', 'checkout', '--orphan', branche], cwd=dossier)
@@ -354,7 +356,7 @@ def creer_historique_texte(arg):
         if not date_reprise_git or vt.strftime('%Y-%m-%d') >= date_reprise_git:
             dates_fin_texte.append( vt )
     versions_texte = sorted(set(dates_texte).union(set(dates_fin_texte)))
-    
+
     versions_texte = sorted(list(set(versions_texte)))
 
     if not versions_texte:
@@ -412,7 +414,7 @@ def creer_historique_texte(arg):
     }
     branche_courante = branche
     for (i_version, version_texte) in enumerate(versions_texte):
-        
+
         # Passer les versions 'nulles'
         #if version_texte.base is None:
         #    continue
@@ -439,7 +441,7 @@ def creer_historique_texte(arg):
 
         # Créer les sections (donc tout le texte)
         contenu, fin_vigueur = fs.obtenir_texte_section( None, [], cid, debut, fin )
-        
+
         if not contenu.strip():
             if str(fin) == '2999-01-01':
                 logger.info(('Version {:'+wnbver+'} (du {} à  maintenant) non-enregistrée car vide').format(i_version+1, debut))
@@ -619,7 +621,10 @@ def nettoyer_refs_intermediaires(dossier):
         (str) Dossier contenant le dépôt Git.
     """
 
-    refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
+    try:
+        refs = str( subprocess.check_output(['git', 'show-ref'], cwd=dossier), 'utf-8' ).strip()
+    except subprocess.CalledProcessError:
+        raise Exception("Le dossier GIT existe déjà.")
     refs = re.findall( '^([0-9a-f]{40}) (refs/(.+?)/([0-9]{8}-[0-9]{6})/(vigueur(?:-future)?))$', refs, flags=re.MULTILINE )
     categories = {}
     for ref in refs:

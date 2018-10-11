@@ -41,7 +41,7 @@ class StockageGitFichiers( Stockage ):
         for fichier in fichiers:
             nom_fichier = os.path.join( self.dossier, fichier[0] )[-256:]
             os.makedirs( os.path.dirname( nom_fichier ), exist_ok=True )
-            with open( nom_fichier, 'w' ) as f:
+            with open( nom_fichier, 'w' , encoding='utf-8') as f:
                 contenu = fichier[1].strip()
                 if contenu:
                     f.write( fichier[1].strip() + '\n' )
