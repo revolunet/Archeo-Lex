@@ -1,16 +1,16 @@
-FROM debian:jessie
+FROM python:3
 
 #
 # usage example with local mounts :
 #
 # docker run \
-#    -v $PWD/tarballs:/root/legilibre/tarballs \
-#    -v $PWD/sqlite:/root/legilibre/sqlite \
+#    -v $PWD/tarballs:/legilibre/tarballs \
+#    -v $PWD/sqlite:/legilibre/sqlite \
 #    -v $PWD/textes:/textes \
-#    -v $PWD:/root/legilibre/code/Archeo-Lex \
-#    archeo-lex python3 /root/legilibre/code/Archeo-Lex/archeo-lex \
+#    -v $PWD:/legilibre/code/Archeo-Lex \
+#    archeo-lex python3 /legilibre/code/Archeo-Lex/archeo-lex \
 #    -t LEGITEXT000006069414 \
-#    --bddlegi=/root/legilibre/sqlite/legilibre.sqlite \
+#    --bddlegi=/legilibre/sqlite/legilibre.sqlite \
 #    --organisation=articles
 #
 #
@@ -19,14 +19,18 @@ ENV PYTHONIOENCODING="UTF-8"
 ENV LANG='C.UTF-8'
 ENV LC_ALL='C.UTF-8'
 
-ENV LEGILIBRE_DIR=/root/legilibre
+ENV LEGILIBRE_DIR=/legilibre
 
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
     apt-get dist-upgrade -y && \
-    apt-get install -y git && \
-    apt-get install -y libarchive13 python3-pip git htop sqlite3 zlib1g-dev && \
-    apt-get install -y python3-dev libxml2-dev libxslt1-dev python3-setuptools python3-wheel wget
+    apt-get install -y libarchive13 python3-pip git htop sqlite3 locales
 
+RUN sed -i -e 's/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=fr_FR.UTF-8
+
+ENV LANG fr_FR.UTF-8
 RUN mkdir -p $LEGILIBRE_DIR && \
     cd $LEGILIBRE_DIR && \
     mkdir -p code tarballs sqlite textes cache

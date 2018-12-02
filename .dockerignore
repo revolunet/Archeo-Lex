@@ -1,0 +1,5 @@
+*.pyc
+
+# only use mount volumes to reduce image size
+./sqlite
+./tarballs
