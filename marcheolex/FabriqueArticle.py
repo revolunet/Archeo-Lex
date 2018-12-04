@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Archéo Lex – Pure Histoire de la Loi française
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module assemble les textes et fait l’export final
-# 
+#
 # This program is free software. It comes without any warranty, to
 # the extent permitted by applicable law. You can redistribute it
 # and/or modify it under the terms of the Do What The Fuck You Want
@@ -16,17 +16,19 @@ import time
 from marcheolex.utilitaires import comp_infini_large
 from marcheolex.exports import *
 
+SYNTAXE_DEFAUT = Markdown()
+
 class FabriqueArticle:
 
-    def __init__( self, db, stockage, syntaxe, cache = None ):
+    def __init__( self, db, stockage = None, syntaxe = SYNTAXE_DEFAUT, cache = None ):
 
         """
         :param db:
             Base de donnée.
         :param stockage:
-            (Stockage) Classe modélisant le stockage.
+            (Stockage) instance modélisant le stockage.
         :param syntaxe:
-            (Syntaxes) Classe modélisant la syntaxe.
+            (Syntaxes) instance modélisant la syntaxe.
         :param cache:
             boolean Utilisation d’un cache mémoire
         """
@@ -105,7 +107,7 @@ class FabriqueArticle:
         if debut_vigueur_texte and comp_infini_large( date_fin, debut_vigueur_texte ):
             return (num, None, date_debut, date_fin)
 
-        # La période de vigueur de cet article n’est pas encore commencé (fin_vigueur_texte <= date_debut) 
+        # La période de vigueur de cet article n’est pas encore commencé (fin_vigueur_texte <= date_debut)
         # Les articles intemporels (= sans date de début de vigueur (et normalement sans date de fin de vigueur)) sont considérés comme toujours en vigueur
         if date_debut and comp_infini_large( fin_vigueur_texte, date_debut ):
             return (num, None, date_debut, date_fin)
@@ -122,7 +124,8 @@ class FabriqueArticle:
         texte_retourne = titre_formate + texte_article + '\n\n'
 
         # Enregistrement
-        self.stockage.ecrire_ressource( id, hierarchie, num, '', texte_article )
+        if self.stockage:
+            self.stockage.ecrire_ressource( id, hierarchie, num, '', texte_article )
 
         return (num, texte_retourne, date_debut, date_fin)
 

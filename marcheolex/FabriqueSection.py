@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# 
+#
 # Archéo Lex – Pure Histoire de la Loi française
 # – crée un dépôt Git des lois françaises écrites en syntaxe Markdown
 # – ce module assemble les textes et fait l’export final
-# 
+#
 # This program is free software. It comes without any warranty, to
 # the extent permitted by applicable law. You can redistribute it
 # and/or modify it under the terms of the Do What The Fuck You Want
@@ -57,7 +57,7 @@ class FabriqueSection:
         self.syntaxe = fabrique_article.syntaxe
 
         self.sections = {}
-        self.desactiver_cache = isinstance( self.stockage.organisation, UnArticleParFichierSansHierarchie ) or isinstance( self.stockage.organisation, UnArticleParFichierAvecHierarchie )
+        self.desactiver_cache = self.stockage and (isinstance( self.stockage.organisation, UnArticleParFichierSansHierarchie ) or isinstance( self.stockage.organisation, UnArticleParFichierAvecHierarchie ))
 
 
     def effacer_cache():
@@ -156,7 +156,7 @@ class FabriqueSection:
             if sfin != None and comp_infini_strict( debut_vigueur_texte, sfin ):
                 fins_vigueur.add( sfin )
 
-            # La période de vigueur de cette section n’est pas encore commencée (fin_vigueur_texte <= sdebut) 
+            # La période de vigueur de cette section n’est pas encore commencée (fin_vigueur_texte <= sdebut)
             # Les sections intemporelles (= sans date de début de vigueur (et normalement sans date de fin de vigueur)) sont considérées comme toujours en vigueur
             if sdebut and comp_infini_large( fin_vigueur_texte, sdebut ):
                 continue
@@ -178,8 +178,8 @@ class FabriqueSection:
                 if not self.desactiver_cache and comp_infini_large( cdebut, debut_vigueur_texte ) and comp_infini_large( fin_vigueur_texte, cfin ):
 
                     texte = texte + ctexte
-
-                    self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, ctexte )
+                    if self.stockage:
+                        self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, ctexte )
 
                     # Si la section a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes
                     if cfin:
@@ -197,7 +197,8 @@ class FabriqueSection:
                     texte_section = titre_formate + texte_section
                     texte = texte + texte_section
 
-                    self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, texte_section )
+                    if self.stockage:
+                        self.stockage.ecrire_ressource( section, chierarchie, snum, stitre_ta, texte_section )
 
                     self.sections[section][id] = (sposition, snum, stitre_ta, sdebut, sfin, debut_vigueur_texte, fin_vigueur_section, texte_section)
 
@@ -212,12 +213,11 @@ class FabriqueSection:
                 chierarchie.append( (position, section, None) )
 
                 valeur_article = self.fabrique_article.obtenir_texte_article( section, chierarchie, debut_vigueur_texte, fin_vigueur_texte )
-
                 num, texte_article, debut_vigueur_article, fin_vigueur_article = valeur_article
 
                 # L’article a une période de vigueur comprise dans l’intervalle courant de vigueur du texte : ajouter le texte
                 if texte_article != None:
-                    
+
                     texte = texte + texte_article
 
                     # Si l’article a une fin de vigueur, celle-ci devient une borne maximale de fin de vigueur des sections parentes

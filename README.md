@@ -116,7 +116,7 @@ Ce programme a été initialement (début août 2014) développé en 5 jours ave
 
 ### Nouvelle interface
 
-```
+```python
 from __future__ import unicode_literals
 import marcheolex.exports, legi.utils, datetime
 from marcheolex.FabriqueArticle import FabriqueArticle
@@ -136,7 +136,7 @@ sf = marcheolex.exports.StockageGitFichiers()
 sf.organisation = fu
 
 db = legi.utils.connect_db('cache/sql/legi.sqlite')
-fa = FabriqueArticle( db, sf, True )
+fa = FabriqueArticle( db=db, stockage=sf, syntaxe=md, cache=True )
 fs = FabriqueSection( fa );
 
 fa.obtenir_texte_article( 3, 'LEGIARTI000030127268', datetime.date(1970,1,1), datetime.date(2038,1,1), 'VIGUEUR')
